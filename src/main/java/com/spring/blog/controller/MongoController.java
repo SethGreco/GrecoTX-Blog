@@ -1,19 +1,26 @@
 package com.spring.blog.controller;
 
 import com.mongodb.MongoException;
+import com.mongodb.MongoWriteException;
 import com.mongodb.client.result.DeleteResult;
 import com.spring.blog.model.BlogPost;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +53,6 @@ public class MongoController {
         Query query = Query.query(criteria);
         try {
             BlogPost blogPost = mongoTemplate.findOne(query, BlogPost.class, "blogposts");
-
             return ResponseEntity.ok(blogPost);
         } catch(MongoException e){
             log.error("Mongo failed to find target article");
@@ -57,15 +63,14 @@ public class MongoController {
 
 //    REST ENDPOINT for inserting a new record into DB
     @PostMapping("/articles")
-    public ResponseEntity<HttpStatus> postArticle(@RequestBody(required = true) BlogPost blogPost){
+    public ResponseEntity<HttpStatus> postArticle(@Valid @RequestBody BlogPost blogPost){
         try{
             log.info("Mongo Record being inserted");
             mongoTemplate.insert(blogPost, "blogposts");
-
-        }catch (MongoException e){
+        }catch (DuplicateKeyException e){
             log.error("Mongo failed to insert record: " + e);
             throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", e);
+                    HttpStatus.BAD_REQUEST, "Duplicate key in database.  Cannot create new record", e);
         }
         return ResponseEntity.ok(HttpStatus.ACCEPTED);
     }
