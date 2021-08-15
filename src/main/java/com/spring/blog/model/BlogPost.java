@@ -5,19 +5,27 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.validation.constraints.*;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Range;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Document
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BlogPost {
 
+    @Id
     @Range(min=1, max=10000)
     private int id;
 
+    @Indexed(unique = true)
     @NotEmpty(message = "title cannot be empty or null")
     private String title;
 
@@ -26,10 +34,4 @@ public class BlogPost {
 
     private String body;
 
-    public BlogPost(int id, String title, String date, String body) {
-        this.id = getId();
-        this.title = getTitle();
-        this.date = getDate();
-        this.body = getBody();
-    }
 }

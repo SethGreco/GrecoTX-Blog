@@ -1,7 +1,6 @@
 package com.spring.blog.controller;
 
 import com.mongodb.MongoException;
-import com.mongodb.MongoWriteException;
 import com.mongodb.client.result.DeleteResult;
 import com.spring.blog.model.BlogPost;
 import lombok.extern.slf4j.Slf4j;
@@ -10,17 +9,12 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.Errors;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,10 +28,9 @@ public class MongoController {
 
 // REST ENDPOINT for retrieving all articles
     @GetMapping("/articles")
-    public ResponseEntity<List<BlogPost>> getArticles() {
+    public List<BlogPost> getArticles() {
         try{
-            List<BlogPost> allArticles = mongoTemplate.findAll(BlogPost.class, "blogposts");
-            return ResponseEntity.ok(allArticles);
+            return mongoTemplate.findAll(BlogPost.class, "blogposts");
         }catch (MongoException e){
             log.error("Mongo failed to find all records: " + e);
             throw new ResponseStatusException(
@@ -47,13 +40,12 @@ public class MongoController {
 
 // REST ENDPOINT for retrieving single article
     @GetMapping("/articles/{title}")
-    public ResponseEntity<BlogPost> getSingleArticle(
+    public BlogPost getSingleArticle(
             @PathVariable("title") String title) {
         Criteria criteria = Criteria.where("title").is(title);
         Query query = Query.query(criteria);
         try {
-            BlogPost blogPost = mongoTemplate.findOne(query, BlogPost.class, "blogposts");
-            return ResponseEntity.ok(blogPost);
+            return mongoTemplate.findOne(query, BlogPost.class, "blogposts");
         } catch(MongoException e){
             log.error("Mongo failed to find target article");
             throw new ResponseStatusException(
